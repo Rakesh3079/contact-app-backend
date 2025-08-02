@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 app.post('/send-email', async (req, res) => {
-  const { name, email, message } = req.body;
+  const { firstName, lastName, email, message } = req.body;
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -21,10 +21,18 @@ app.post('/send-email', async (req, res) => {
   });
 
   const mailOptions = {
-    from: email,
+    from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
-    subject: `New message from ${name}`,
-    text: message
+    subject: `New Contact Form Message from ${firstName} ${lastName}`,
+    text: `
+    You have received a new message from your website:
+
+Name: ${firstName} ${lastName}
+Email: ${email}
+
+Message:
+${message}
+    `
   };
 
   try {
