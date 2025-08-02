@@ -23,15 +23,15 @@ app.post('/send-email', async (req, res) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
-    subject: `New Contact Form Message from ${firstName} ${lastName}`,
+    subject: `New Message from ${firstName} ${lastName}`,
     text: `
     You have received a new message from your website:
 
-Name: ${firstName} ${lastName}
-Email: ${email}
+    Name: ${firstName} ${lastName}
+    Email: ${email}
 
-Message:
-${message}
+    Message:
+    ${message}
     `
   };
 
@@ -46,4 +46,8 @@ ${message}
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
 });
