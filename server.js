@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-
+require('dotenv').config();
 // MongoDB Connection
 mongoose.connect('mongodb+srv://rakeshsambu17:zdcBSoK7494kpkw1@mycluster.vzdqzei.mongodb.net/formDataDB?retryWrites=true&w=majority&appName=MyCluster', {
   useNewUrlParser: true,
