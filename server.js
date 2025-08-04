@@ -1,53 +1,78 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
-require('dotenv').config();
+const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// MongoDB Connection
+mongoose.connect('mongodb+srv://rakeshsambu17:zdcBSoK7494kpkw1@mycluster.vzdqzei.mongodb.net/formDataDB?retryWrites=true&w=majority&appName=MyCluster', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB Atlas'))
+.catch((err) => console.error('❌ MongoDB connection error:', err));
+
+// Define a schema and model
+const formSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  phone: String,
+  message: String,
+  submittedAt: { type: Date, default: Date.now }
+});
+
+const Form = mongoose.model('Form', formSchema);
+
+// Root route
+app.get('/', (req, res) => {
+  res.send('Backend is running!');
+});
+
+// Email and DB route
 app.post('/send-email', async (req, res) => {
-  const { firstName, lastName, email, message } = req.body;
-
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_USER,
-    subject: `New Message from ${firstName} ${lastName}`,
-    text: `
-    You have received a new message from your website:
-
-    Name: ${firstName} ${lastName}
-    Email: ${email}
-
-    Message:
-    ${message}
-    `
-  };
+  const { name, email, phone, message } = req.body;
 
   try {
+    // Save form data to MongoDB
+    const formData = new Form({ name, email, phone, message });
+    await formData.save();
+    console.log('🟢 Form data saved to MongoDB');
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_RECEIVER,
+      subject: 'New Form Submission',
+      text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
+    };
+
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: 'Email sent successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Failed to send email' });
+    console.log('📧 Email sent');
+
+    res.status(200).json({ message: 'Form submitted and email sent successfully!' });
+  } catch (error) {
+    console.error('❌ Error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again later.' });
   }
 });
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-app.get("/", (req, res) => {
-  res.send("Backend is running!");
+  console.log(`🚀 Server running on port ${PORT}`);
 });
