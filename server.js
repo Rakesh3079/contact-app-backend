@@ -11,9 +11,9 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-require('dotenv').config();
-// MongoDB Connection
-mongoose.connect('mongodb+srv://rakeshsambu17:zdcBSoK7494kpkw1@mycluster.vzdqzei.mongodb.net/formDataDB?retryWrites=true&w=majority&appName=MyCluster', {
+
+// MongoDB Connection using env variable
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -29,7 +29,8 @@ const formSchema = new mongoose.Schema({
   submittedAt: { type: Date, default: Date.now }
 });
 
-const Form = mongoose.model('Form', formSchema);
+// Use existing collection name 'Submissions' in UserDetails DB
+const Form = mongoose.model('Submissions', formSchema, 'Submissions');
 
 // Root route
 app.get('/', (req, res) => {
