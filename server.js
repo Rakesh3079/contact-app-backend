@@ -39,39 +39,38 @@ app.get('/', (req, res) => {
 
 // Email and DB route
 app.post('/send-email', async (req, res) => {
-  const { name, email, phone, message } = req.body;
-
   try {
-    // Save form data to MongoDB
-    const formData = new Form({ name, email, phone, message });
-    await formData.save();
-    console.log('🟢 Form data saved to MongoDB');
+    const { firstName, lastName, email, message } = req.body;
+    console.log('📩 Received form data:', req.body);
 
-    // Send email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // Save to MongoDB
+    const newSubmission = new FormSubmission({ firstName, lastName, email, message });
+    await newSubmission.save();
+    console.log('✅ Data saved to MongoDB');
 
+    // Send Email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_RECEIVER,
-      subject: 'New Form Submission',
-      text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
+      subject: 'New Contact Form Submission',
+      html: `
+        <p><strong>First Name:</strong> ${firstName}</p>
+        <p><strong>Last Name:</strong> ${lastName}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong> ${message}</p>
+      `,
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log('📧 Email sent');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('📧 Email sent:', info.response);
 
-    res.status(200).json({ message: 'Form submitted and email sent successfully!' });
+    res.status(200).json({ success: true, message: 'Message sent successfully!' });
   } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ message: 'Something went wrong. Please try again later.' });
+    console.error('❌ Error in /send-email:', error);
+    res.status(500).json({ success: false, message: 'Failed to send message. Try again.' });
   }
 });
+
 
 // Start server
 app.listen(PORT, () => {
